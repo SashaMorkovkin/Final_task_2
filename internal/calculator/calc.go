@@ -33,111 +33,121 @@ func StringToFloat64(str string) float64 {
 	return res
 }
 
-// Проверка на знак операции
+// Проверка, является ли символ знаком операции
 func IsSign(value rune) bool {
 	return value == '+' || value == '-' || value == '*' || value == '/'
 }
 
-// Основная функция для вычисления выражения
+// Основная функция для вычисления выражений
 func Calc(expression string) (float64, error) {
+	// Убираем пробелы
+	expression = strings.ReplaceAll(expression, " ", "")
 	if len(expression) < 3 {
-		return 0, fmt.Errorf("???")
+		return 0, fmt.Errorf("invalid expression")
 	}
-	var res float64
-	var b string
-	var c rune = 0
-	var resflag bool = false
-	var isc int
-	var countc int = 0
-	for _, value := range expression {
-		if IsSign(value) {
-			countc++
+	for {
+		openIdx := strings.LastIndex(expression, "(")
+		if openIdx == -1 {
+			break
 		}
-	}
-	if IsSign(rune(expression[0])) || IsSign(rune(expression[len(expression)-1])) {
-		return 0, fmt.Errorf("???")
-	}
-	// Обработка скобок
-	for i, value := range expression {
-		if value == '(' {
-			isc = i
+		closeIdx := strings.Index(expression[openIdx:], ")")
+		if closeIdx == -1 {
+			return 0, fmt.Errorf("mismatched parentheses")
 		}
-		if value == ')' {
-			calc, err := Calc(expression[isc+1 : i])
+		innerExpr := expression[openIdx+1 : openIdx+closeIdx]
+		result, err := Calc(innerExpr)
+		if err != nil {
+			return 0, err
+		}
+		// Заменяем выражение в скобках на результат
+		expression = expression[:openIdx] + fmt.Sprintf("%f", result) + expression[openIdx+closeIdx+1:]
+	}
+
+	operators := []rune{'*', '/'}
+	for _, op := range operators {
+		for {
+			opIdx := strings.IndexRune(expression, op)
+			if opIdx == -1 {
+				break
+			}
+			leftIdx := opIdx - 1
+			for leftIdx >= 0 && !IsSign(rune(expression[leftIdx])) {
+				leftIdx--
+			}
+			leftIdx++
+
+			rightIdx := opIdx + 1
+			for rightIdx < len(expression) && !IsSign(rune(expression[rightIdx])) {
+				rightIdx++
+			}
+
+			leftOperand := expression[leftIdx:opIdx]
+			rightOperand := expression[opIdx+1 : rightIdx]
+			leftNum, err := strconv.ParseFloat(leftOperand, 64)
 			if err != nil {
-				return 0, fmt.Errorf("???")
+				return 0, fmt.Errorf("invalid number: %s", leftOperand)
 			}
-			calcstr := strconv.FormatFloat(calc, 'f', 0, 64)
-			i2 := i
-			i -= len(expression[isc:i+1]) - len(calcstr)
-			expression = strings.Replace(expression, expression[isc:i2+1], calcstr, 1)
+			rightNum, err := strconv.ParseFloat(rightOperand, 64)
+			if err != nil {
+				return 0, fmt.Errorf("invalid number: %s", rightOperand)
+			}
+			var result float64
+			switch op {
+			case '*':
+				result = leftNum * rightNum
+			case '/':
+				if rightNum == 0 {
+					return 0, fmt.Errorf("division by zero")
+				}
+				result = leftNum / rightNum
+			}
+			expression = expression[:leftIdx] + fmt.Sprintf("%f", result) + expression[rightIdx:]
 		}
 	}
-	// Обработка операций с приоритетом
-	if countc > 1 {
-		for i := 1; i < len(expression); i++ {
-			value := rune(expression[i])
-			if value == '*' || value == '/' {
-				var imin int = i - 1
-				if imin != 0 {
-					for !IsSign(rune(expression[imin])) && imin > 0 {
-						imin--
-					}
-					imin++
-				}
-				var imax int = i + 1
-				if imax == len(expression) {
-					imax--
-				} else {
-					for !IsSign(rune(expression[imax])) && imax < len(expression)-1 {
-						imax++
-					}
-				}
-				if imax == len(expression)-1 {
-					imax++
-				}
-				calc, err := Calc(expression[imin:imax])
-				if err != nil {
-					return 0, fmt.Errorf("???")
-				}
-				calcstr := strconv.FormatFloat(calc, 'f', 0, 64)
-				i -= len(expression[isc:i+1]) - len(calcstr) - 1
-				expression = strings.Replace(expression, expression[imin:imax], calcstr, 1)
+
+	for _, op := range []rune{'+', '-'} {
+		for {
+			opIdx := strings.IndexRune(expression, op)
+			if opIdx == -1 {
+				break
 			}
-			if value == '+' || value == '-' || value == '*' || value == '/' {
-				c = value
+			leftIdx := opIdx - 1
+			for leftIdx >= 0 && !IsSign(rune(expression[leftIdx])) {
+				leftIdx--
 			}
+			leftIdx++
+
+			rightIdx := opIdx + 1
+			for rightIdx < len(expression) && !IsSign(rune(expression[rightIdx])) {
+				rightIdx++
+			}
+			leftOperand := expression[leftIdx:opIdx]
+			rightOperand := expression[opIdx+1 : rightIdx]
+			leftNum, err := strconv.ParseFloat(leftOperand, 64)
+			if err != nil {
+				return 0, fmt.Errorf("invalid number: %s", leftOperand)
+			}
+			rightNum, err := strconv.ParseFloat(rightOperand, 64)
+			if err != nil {
+				return 0, fmt.Errorf("invalid number: %s", rightOperand)
+			}
+
+			// Выполняем операцию
+			var result float64
+			switch op {
+			case '+':
+				result = leftNum + rightNum
+			case '-':
+				result = leftNum - rightNum
+			}
+			expression = expression[:leftIdx] + fmt.Sprintf("%f", result) + expression[rightIdx:]
 		}
 	}
-	// Основная обработка арифметических операций
-	for _, value := range expression + "s" {
-		switch {
-		case value == ' ':
-			continue
-		case value > 47 && value < 58: // Если это цифра
-			b += string(value)
-		case IsSign(value) || value == 's': // Если это знак
-			if resflag {
-				switch c {
-				case '+':
-					res += StringToFloat64(b)
-				case '-':
-					res -= StringToFloat64(b)
-				case '*':
-					res *= StringToFloat64(b)
-				case '/':
-					res /= StringToFloat64(b)
-				}
-			} else {
-				resflag = true
-				res = StringToFloat64(b)
-			}
-			b = strings.ReplaceAll(b, b, "")
-			c = value
-		case value == 's':
-		default:
-			return 0, fmt.Errorf("Not correct input")
-		}
+
+	// Преобразуем финальный результат в число
+	finalResult, err := strconv.ParseFloat(expression, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid expression result")
 	}
-	return res, nil
+	return finalResult, nil
 }
