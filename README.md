@@ -1,4 +1,4 @@
-﻿# Веб-калькулятор
+# Веб-калькулятор
 ## Структура проекта:
 + cmd/ - директория с файлом main.go(точка входа в программу)
 + internal/ - директория где храниться сервер
@@ -27,6 +27,15 @@
     + Команда:
         >curl --location 'http://localhost:8080/api/v1/expressions'
     + Ответ:
-        >{"expressions":[{"ID":"task-1","Status":"completed","Result":6,"Expression":"2+2*2"}]}
-+ В других случаях ответ :
-    >{"error":"Internal server error"}
+        >{"expressions":[{"ID":"1","Status":"completed","Result":6,"Expression":"ваш_пример"},{"ID":"2","Status":"completed","Result":6,"Expression":"ваш_пример"}]}
++ Пример №3
+    + Команда:
+        >curl --location 'http://localhost:8080/api/v1/expressions/1'
+    + Ответ:
+        > {"ID":"1","Status":"completed","Result":3,"Expression":"ваш_пример"}
++ Если калькулятор не может посчитать :
+    >{"Error calculating expression"}
++ В других случаях :
+    >{"Expression not found"}
+
+>Так же ошибки пишутся более подробно в логи
