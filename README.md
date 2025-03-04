@@ -15,7 +15,7 @@
 > PS: Сервер работает на порте 8080
 
 ## Примеры запросов
-+ Пример №1
++ Пример №1 (отправка примера)
     + Команда:
         >curl --location 'http://localhost:8080/api/v1/calculate' \
         >--header 'Content-Type: application/json' \
@@ -23,12 +23,12 @@
 
     + Ответ:
         >{"id": "1","result": 6}
-+ Пример №2
++ Пример №2 (получение списка)
     + Команда:
         >curl --location 'http://localhost:8080/api/v1/expressions'
     + Ответ:
-        >{"expressions":[{"ID":"1","Status":"completed","Result":6,"Expression":"ваш_пример"},{"ID":"2","Status":"completed","Result":6,"Expression":"ваш_пример"}]}
-+ Пример №3
+        >[{"expressions":[{"ID":"1","Status":"completed","Result":6,"Expression":"ваш_пример"},{"ID":"2","Status":"completed","Result":6,"Expression":"ваш_пример"}]}
++ Пример №3 (получение по id)
     + Команда:
         >curl --location 'http://localhost:8080/api/v1/expressions/1'
     + Ответ:
