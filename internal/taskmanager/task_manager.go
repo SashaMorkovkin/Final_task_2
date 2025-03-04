@@ -26,7 +26,7 @@ type TaskManager struct{}
 
 func generateTaskID() string {
 	taskCounter++
-	return fmt.Sprintf("task-%d", taskCounter)
+	return fmt.Sprintf("%d", taskCounter)
 }
 
 func AddTask(expression string) string {

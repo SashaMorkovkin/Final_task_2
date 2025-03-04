@@ -35,7 +35,6 @@ func workerLoop() {
 }
 
 func getTaskFromOrchestrator() *taskmanager.Task {
-	// Получаем задачу от оркестратора (например, через HTTP запрос)
 	tasks := taskmanager.GetTasks()
 	if len(tasks) > 0 {
 		return tasks[0]
